@@ -109,6 +109,9 @@ class _Settings(_Base):
     config_reverse_proxy_login_header_name = Column(String)
     config_allow_reverse_proxy_header_login = Column(Boolean, default=False)
 
+    # Plugins enabled by default
+    config_plugins_enabled_metadata_provider = Column(String, default='google,douban')
+
     def __repr__(self):
         return self.__class__.__name__
 
