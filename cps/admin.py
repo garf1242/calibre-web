@@ -43,6 +43,8 @@ from .helper import speaking_language, check_valid_domain, send_test_mail, reset
 from .gdriveutils import is_gdrive_ready, gdrive_support
 from .web import admin_required, render_title_template, before_request, unconfigured, login_required_if_no_ano
 
+from .plugins import MetadataProviderCategory
+
 feature_support = {
         'ldap': False, # bool(services.ldap),
         'goodreads': bool(services.goodreads_support)
@@ -983,3 +985,30 @@ def get_updater_status():
         except Exception:
             status['status'] = 11
     return json.dumps(status)
+
+
+@admi.route("/admin/plugins", methods=["GET", "POST"])
+@login_required
+@admin_required
+def plugins():
+    if request.method == "POST":
+        return _plugin_update()
+    return _plugin_view()
+
+def _plugin_view():
+    providers = [ provider.to_dict() for provider in MetadataProviderCategory.list_available() ]
+    return render_title_template("plugins.html", metadata_providers=providers,
+                                 title=_(u"Plugins Configuration"), page="admin.plugins")
+
+def _plugin_update():
+    to_enable = request.form.to_dict()
+    for provider in MetadataProviderCategory.list_available():
+        checkbox_key = "metadata-provider-" + provider.name
+        if checkbox_key in to_enable and to_enable[checkbox_key] == 'on':
+            provider.enable()
+        else:
+            provider.disable()
+    # save to config
+    MetadataProviderCategory.save_to_config()
+    return _plugin_view()
+

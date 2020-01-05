@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="discover">
+  <h2>{{title}}</h2>
+  <form role="form" method="POST" autocomplete="off">
+    <div class="panel-group">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">{{_('Metadata Providers')}}</h4>
+        </div>
+        <div class="panel-body">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th class="col-xs-2">{{_('Name')}}</th>
+                <th class="col-xs-2">{{_('Version')}}</th>
+                <th class="col-xl-6">{{_('Description')}}</th>
+                <th class="col-xs-2">{{_('Enabled')}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for provider in metadata_providers %}
+              <tr>
+                <td>{{provider.name}}</td>
+                <td>{{provider.version}}</td>
+                <td>{{provider.description}}</td>
+                <td><input type="checkbox" name="metadata-provider-{{provider.name}}" {% if provider.enabled %}checked{% endif %}></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-sm-12">
+      <button type="submit" name="submit" class="btn btn-default">{{_('Submit')}}</button>
+      <a href="{{ url_for('admin.admin') }}" class="btn btn-default">{{_('Back')}}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
