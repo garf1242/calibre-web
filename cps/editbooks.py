@@ -27,7 +27,7 @@ import json
 from shutil import move, copyfile
 from uuid import uuid4
 
-from flask import Blueprint, request, flash, redirect, url_for, abort, Markup, Response
+from flask import Blueprint, request, flash, redirect, url_for, abort, Markup, Response, make_response
 from flask_babel import gettext as _
 from flask_login import current_user, login_required
 
@@ -36,6 +36,7 @@ from . import config, get_locale, db, ub, worker
 from .helper import order_authors, common_filters
 from .web import login_required_if_no_ano, render_title_template, edit_required, upload_required
 
+from .plugins import MetadataProviderCategory
 
 editbook = Blueprint('editbook', __name__)
 log = logger.create()
@@ -238,11 +239,14 @@ def render_edit_book(book_id):
         except Exception:
             log.warning('%s already removed from list.', file.format.lower())
 
+    # Get all available metadata providers
+    providers = [ provider.to_dict() for provider in MetadataProviderCategory.list_enabled() ]
+
     return render_title_template('book_edit.html', book=book, authors=author_names, cc=cc,
                                  title=_(u"edit metadata"), page="editbook",
                                  conversion_formats=allowed_conversion_formats,
-                                 source_formats=valid_source_formats)
-
+                                 source_formats=valid_source_formats,
+                                 metadata_providers=providers)
 
 def edit_cc_data(book_id, book, to_save):
     cc = db.session.query(db.Custom_Columns).filter(db.Custom_Columns.datatype.notin_(db.cc_exceptions)).all()
@@ -377,6 +381,24 @@ def upload_cover(request, book):
                 return False
     return None
 
+@editbook.route("/ajax/metadata/<string:provider>/<int:book_id>")
+@login_required_if_no_ano
+@edit_required
+def search_book_metadata(book_id, provider):
+    book = db.session.query(db.Books)\
+        .filter(db.Books.id == book_id).filter(common_filters()).first()
+    # Book not found
+    if not book:
+        flash(_(u"Error opening eBook. File does not exist or file is not accessible"), category="error")
+        return redirect(url_for("web.index"))
+    provider = MetadataProviderCategory.get(provider)
+    result = []
+    if provider:
+        result = provider.search_results(book, additional_keywords=request.args)
+    js = json.dumps(result)
+    response = make_response(js)
+    response.headers["Content-Type"] = "application/json; charset=utf-8"
+    return response
 
 @editbook.route("/admin/book/<int:book_id>", methods=['GET', 'POST'])
 @login_required_if_no_ano

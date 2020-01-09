@@ -50,6 +50,7 @@
 
   </div>
 <form role="form" action="{{ url_for('editbook.edit_book', book_id=book.id) }}" method="post" enctype="multipart/form-data" id="book_edit_frm">
+  <input type="hidden" id="book_id" name="book_id" value="{{book.id}}"> 
   <div class="col-sm-9 col-xs-12">
     <div class="form-group">
       <label for="book_title">{{_('Book Title')}}</label>
@@ -219,11 +220,10 @@
       </div>
       <div class="modal-body">
         <div class="text-center padded-bottom">
-          <input type="checkbox" id="show-douban" class="pill" data-control="douban" checked>
-          <label for="show-douban">Douban <span class="glyphicon glyphicon-ok"></span></label>
-
-          <input type="checkbox" id="show-google" class="pill" data-control="google" checked>
-          <label for="show-google">Google <span class="glyphicon glyphicon-ok"></span></label>
+          {% for provider in metadata_providers %}
+	  <input type="checkbox" id="show-{{provider.name}}" class="pill" data-control="result-{{provider.name}}" checked>
+	  <label for="show-{{provider.name}}">{{provider.title}} <span class="glyphicon glyphicon-ok"></span></label>
+          {% endfor %}
         </div>
 
         <div id="meta-info">
@@ -241,7 +241,7 @@
 
 {% block js %}
 <script type="text/template" id="template-book-result">
-  <li class="media" data-related="<%= source.id %>">
+  <li class="media" data-related="result-<%= source.id %>">
     <img class="pull-left img-responsive"
          data-toggle="modal"
          data-target="#metaModal"
@@ -276,6 +276,7 @@
     'source': {{_('Source')|safe|tojson}},
   };
   var language = '{{ g.user.locale }}';
+  var metadataProviders = {{metadata_providers|tojson}};
 </script>
 <script src="{{ url_for('static', filename='js/libs/typeahead.bundle.js') }}"></script>
 <script src="{{ url_for('static', filename='js/libs/bootstrap-rating-input.min.js') }}"></script>
