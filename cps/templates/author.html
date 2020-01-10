@@ -12,7 +12,11 @@
   <p>{{author.about|safe}}</p>
   {% endif %}
 
+  {% if author.source == "goodreads" %}
   - {{_("via")}} <a href="{{author.link}}" class="author-link" target="_blank" rel="noopener">Goodreads</a>
+  {% else %}
+  <a href="{{author.link}}" class="author-link" target="_blank" rel="noopener">{{_("More info")}}</a>
+  {% endif %}
 </section>
 
 <div class="clearfix"></div>
